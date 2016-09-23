@@ -9,11 +9,15 @@ class SourceStates(Enum):
     READY = 'ready'
     REJECTED = 'rejected'
     FAILED = 'failed'
+    CONTENT_COMPLETE = 'content_complete'
+    INDEXED = 'indexed'
 
 
 class AllUrlStates(Enum):
     PENDING = 'pending'
-    PROCESSED = 'processed'
+    PARSED = 'processed'
+    FAILED = 'failed'
+    INDEXED = 'indexed'
 
 
 class ArticleStates(Enum):
@@ -26,6 +30,8 @@ class Source(models.Model):
     domain_name = models.URLField()
     state = FSMField(default=SourceStates.PENDING.value, db_index=True)
     trusted_source = models.BooleanField(default=False)
+    last_time_crawled = models.DateTimeField(null=True, blank=True)
+    last_error_message = models.TextField(default='', blank=True)
 
     @transition(
         field=state,
@@ -53,11 +59,27 @@ class Source(models.Model):
 
     @transition(
         field=state,
-        source=SourceStates.CRAWLED.value,
+        source='*',
         target=SourceStates.FAILED.value,
         custom=dict(admin=False)
     )
-    def fail(self):
+    def fail(self, error):
+        self.last_error_message = error
+
+    @transition(
+        field=state,
+        source=SourceStates.CRAWLED.value,
+        target=SourceStates.CONTENT_COMPLETE.value
+    )
+    def extract(self):
+        pass
+
+    @transition(
+        field=state,
+        source=SourceStates.CONTENT_COMPLETE.value,
+        target=SourceStates.INDEXED.value
+    )
+    def index(self):
         pass
 
     def __str__(self):
@@ -81,9 +103,25 @@ class AllUrl(models.Model):
     @transition(
         field=state,
         source='*',
-        target=AllUrlStates.PROCESSED.value
+        target=AllUrlStates.PARSED.value
     )
     def processed(self):
+        pass
+
+    @transition(
+        field=state,
+        source='*',
+        target=AllUrlStates.FAILED.value
+    )
+    def fail(self):
+        pass
+
+    @transition(
+        field=state,
+        source=AllUrlStates.PARSED.value,
+        target=AllUrlStates.INDEXED.value
+    )
+    def index(self):
         pass
 
 
