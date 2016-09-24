@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django_fsm import FSMField, transition
 from enum import Enum
 
@@ -47,7 +48,7 @@ class Source(models.Model):
         target=SourceStates.CRAWLED.value
     )
     def crawl(self):
-        pass
+        self.last_time_crawled = timezone.now()
 
     @transition(
         field=state,
@@ -63,7 +64,7 @@ class Source(models.Model):
         target=SourceStates.FAILED.value,
         custom=dict(admin=False)
     )
-    def fail(self, error):
+    def fail(self, error=''):
         self.last_error_message = error
 
     @transition(
@@ -71,7 +72,7 @@ class Source(models.Model):
         source=SourceStates.CRAWLED.value,
         target=SourceStates.CONTENT_COMPLETE.value
     )
-    def extract(self):
+    def complete(self):
         pass
 
     @transition(
@@ -123,6 +124,9 @@ class AllUrl(models.Model):
     )
     def index(self):
         pass
+
+    def __str__(self):
+        return self.url
 
 
 class Article(models.Model):
