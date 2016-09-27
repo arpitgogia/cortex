@@ -1,5 +1,5 @@
 """
-Test for spider feeder.
+Tests for spider feeder.
 Prerequisites: The Source table is empty.
 """
 
@@ -29,18 +29,13 @@ def test_feedspider():
     source.save()
 
     command = Command()
-
-    success = True
     sources = []
 
     try:
         command.handle()
         sources = [source.domain_name for source in command.all_sources]
     except:
-        success = False
-
-    # Test whether the feeder was able to send the source to RabbitMQ
-    assert success
+        assert 0 == 1
 
     # Test whether exactly the newly created and as ready marked source
     # has been sent to RabbitMQ
