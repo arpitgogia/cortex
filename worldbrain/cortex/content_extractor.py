@@ -35,7 +35,7 @@ class ContentExtractor:
             article2.text = article.text
             article2.keywords = str(article.keywords)
             article2.authors = str(article.authors)
-            article2.tags = article.tags
+            article2.tags = list(article.tags)
             article2.summary = article.summary
             # article2.links
             end = time.time()
