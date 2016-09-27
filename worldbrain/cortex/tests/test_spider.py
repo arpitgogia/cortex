@@ -4,7 +4,7 @@ import pika
 from worldbrain.cortex.daemons.spider import DomainConsumer, \
     SourceSpider, run_spider
 
-from worldbrain.cortex.models import Source, SourceStates
+from worldbrain.cortex.models import Source
 
 # Set up RabbitMQ connection
 SPIDER_QUEUE = 'worldbrain-spider'

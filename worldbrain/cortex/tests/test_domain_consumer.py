@@ -1,7 +1,6 @@
-import pytest
 import pika
 
-from worldbrain.cortex.daemons.spider import DomainConsumer, main
+from worldbrain.cortex.daemons.spider import DomainConsumer
 
 SPIDER_QUEUE = 'worldbrain-spider'
 CREDENTIALS = pika.PlainCredentials('worldbrain', 'worldbrain')

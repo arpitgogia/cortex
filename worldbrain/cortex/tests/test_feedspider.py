@@ -5,7 +5,7 @@ Prerequisites: The Source table is empty.
 
 import pytest
 
-from worldbrain.cortex.models import Source, SourceStates
+from worldbrain.cortex.models import Source
 from worldbrain.cortex.management.commands.feedspider import Command
 
 TEST_DOMAIN_NAME = 'funnymals.org'
