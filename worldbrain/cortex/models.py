@@ -1,7 +1,19 @@
+import pika
+
 from django.db import models
 from django.utils import timezone
 from django_fsm import FSMField, transition
 from enum import Enum
+
+credentials = pika.PlainCredentials('worldbrain', 'worldbrain')
+parameters = pika.ConnectionParameters('polisky.me', 5672, '/worldbrain',
+                                       credentials)
+
+SPIDER_QUEUE = 'worldbrain-spider'
+rabbitmq_connection = pika.adapters.blocking_connection. \
+    BlockingConnection(parameters)
+channel = rabbitmq_connection.channel()
+channel.queue_declare(queue=SPIDER_QUEUE)
 
 
 class SourceStates(Enum):
@@ -40,7 +52,25 @@ class Source(models.Model):
         target=SourceStates.READY.value,
     )
     def ready(self):
-        pass
+
+        try:
+
+            self.state = SourceStates.READY.value
+            self.save()
+
+        except:
+            pass
+
+        else:
+
+            # send the newly accepted domain to the spider
+            try:
+                channel.basic_publish(exchange='', routing_key=SPIDER_QUEUE,
+                                      body='{domain_name};{id}'
+                                      .format(domain_name=self.domain_name,
+                                              id=self.id))
+            except:
+                pass
 
     @transition(
         field=state,
@@ -96,7 +126,7 @@ class AllUrl(models.Model):
         related_query_name='url',
         on_delete=models.CASCADE
     )
-    url = models.URLField()
+    url = models.URLField(unique=True)
     state = FSMField(default=AllUrlStates.PENDING.value, db_index=True)
     html = models.TextField(default='')
     is_article = models.BooleanField(default=True)
