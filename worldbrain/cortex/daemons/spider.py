@@ -1,8 +1,10 @@
 from multiprocessing import Process
-from urllib.parse import *
+from urllib.parse import urljoin, urlsplit, urlparse
 
 import logging
 import pika
+
+from django.db import IntegrityError
 
 from scrapy.http import Request
 from scrapy.selector import Selector
@@ -30,27 +32,41 @@ class SourceSpider(CrawlSpider):
         body = response.body.decode('utf8')
         selector = Selector(text=body)
 
-        new_url = AllUrl(source=self.source, url=response.url, html=body,
-                         is_article=False)
-        new_url.save()
+        url_exists_in_db = False
 
-        urls = selector.css('a').xpath('@href').extract()
+        try:
+            new_url = AllUrl(source=self.source, url=response.url, html=body,
+                             is_article=False)
+            new_url.save()
 
-        for url in urls:
+        except IntegrityError as e:  # url already in the database
+            LOGGER.info(e)
+            url_exists_in_db = True
 
-            split = urlsplit(url)
+        except Exception as e:
+            LOGGER.error(e)
 
-            base = ''
+        finally:
 
-            if not split.scheme:
-                base = 'http://'
+            if not url_exists_in_db:
 
-            if not split.netloc:
-                base += self.domain_name
+                urls = selector.css('a').xpath('@href').extract()
 
-            url = urljoin(base, url)
+                for url in urls:
 
-            yield Request(url=url)
+                    split = urlsplit(url)
+
+                    base = ''
+
+                    if not split.scheme:
+                        base = 'http://'
+
+                    if not split.netloc:
+                        base += self.domain_name
+
+                    url = urljoin(base, url)
+
+                    yield Request(url=url)
 
     rules = (
         Rule(LxmlLinkExtractor(allow=(r'.{,200}', r'[^\?]*')),
@@ -60,9 +76,12 @@ class SourceSpider(CrawlSpider):
 
     def __init__(self, msg):
         """
-        msg: {bytes}, Format '{domain_name};{id}'
-        :param msg:
+        Create a spider for domain name contained in {msg}. The {id} in the
+        message is used to retrieve the corresponding database object.
+        :param msg: {bytes}, Format '{domain_name};{id}'
         """
+
+        from ..models import Source  # for tests
 
         super(CrawlSpider, self).__init__(self)
 
@@ -92,7 +111,6 @@ def run_spider(domain_name):
     crawler_process.start()
 
 
-# Asynchronous message consumer
 class DomainConsumer:
     """
     Asynchronous domain consumer retrieving domain names from RabbitMQ
