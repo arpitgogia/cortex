@@ -16,7 +16,7 @@ def move_sources_to_ready(source):
 @admin.register(Source)
 class SourceAdmin(admin.ModelAdmin, FSMTransitionMixin):
     fsm_field = ('state',)
-    readonly_fields = ('state',)
+    readonly_fields = ('state', 'last_time_crawled', 'last_error_message')
     list_display = ('domain_name', 'state', 'trusted_source',)
     list_filter = ('state', 'trusted_source',)
     actions = ['make_ready', 'make_trusted']
