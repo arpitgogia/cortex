@@ -86,6 +86,14 @@ You also can use the starter script provided:
 
 to start the development server.
 
+
+You can also setup the dev env using docker
+
+```
+docker pull worldbrain/cortex
+docker run -it --net=host --name=cortex cortex_docker
+```
+
 Happy hacking!
 
 # Testing
