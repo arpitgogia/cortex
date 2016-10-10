@@ -4,7 +4,7 @@
 
 ```
 docker pull worldbrain/cortex
-docker run -it --net=host --name=cortex cortex_docker
+docker run -it --net=host --name=cortex worldbrain/cortex
 ```
 ## What's Happening 
 
