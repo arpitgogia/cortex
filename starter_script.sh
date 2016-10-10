@@ -7,4 +7,3 @@ export DATABASE_PASSWORD=cortex
 export ES_HOST=127.0.0.1:9200
 export PGHOST=localhost
 python manage.py runserver
-
