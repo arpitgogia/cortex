@@ -48,6 +48,7 @@ class SourceAdmin(admin.ModelAdmin, FSMTransitionMixin):
 
 @admin.register(AllUrl)
 class AllUrlAdmin(admin.ModelAdmin, FSMTransitionMixin):
+    list_display = ('url', 'state', )
     fsm_field = ('state',)
     readonly_fields = ('state',)
 
