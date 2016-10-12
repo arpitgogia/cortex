@@ -6,12 +6,16 @@ from django_fsm import FSMField, transition
 from enum import Enum
 
 credentials = pika.PlainCredentials('worldbrain', 'worldbrain')
-parameters = pika.ConnectionParameters('polisky.me', 5672, '/worldbrain',
-                                       credentials)
+parameters = pika.ConnectionParameters('149.56.13.163', 5672, '/worldbrain',
+                                       credentials, socket_timeout=2)
 
 SPIDER_QUEUE = 'worldbrain-spider'
-rabbitmq_connection = pika.adapters.blocking_connection. \
-    BlockingConnection(parameters)
+try:
+    rabbitmq_connection = pika.adapters.blocking_connection. \
+        BlockingConnection(parameters)
+except Exception as e:
+    print(e)
+
 channel = rabbitmq_connection.channel()
 channel.queue_declare(queue=SPIDER_QUEUE)
 
@@ -118,6 +122,9 @@ class Source(models.Model):
             self.domain_name, self.state, self.trusted_source
         )
 
+    class Meta:
+        app_label = 'cortex'
+
 
 class AllUrl(models.Model):
     source = models.ForeignKey(
@@ -158,11 +165,18 @@ class AllUrl(models.Model):
     def __str__(self):
         return self.url
 
+    class Meta:
+        app_label = 'cortex'
+
 
 class Article(models.Model):
-    url = models.URLField()
+    url = models.ForeignKey(
+        AllUrl,
+        related_name='articles',
+        related_query_name='article',
+        on_delete=models.CASCADE
+    )
     title = models.CharField(max_length=255)
-    domain_name = models.CharField(max_length=255)
     text = models.TextField(default='')
     keywords = models.TextField(default='')
     authors = models.TextField(default='')
@@ -188,3 +202,9 @@ class Article(models.Model):
     )
     def parsed(self):
         pass
+
+    def __str__(self):
+        return self.url.url
+
+    class Meta:
+        app_label = 'cortex'
