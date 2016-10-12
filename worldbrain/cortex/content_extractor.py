@@ -21,7 +21,7 @@ class ContentExtractor:
                 print('Error extracting content from {url}: {e}'.format(
                     url=entry, e=e))
             else:
-                entry.extracted()
+                entry.processed()
                 entry.save()
 
     def extract_content_wrapper(self, url):
