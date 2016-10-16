@@ -11,7 +11,7 @@ from worldbrain.cortex.models import Source, SourceStates
 class Command(BaseCommand):
     credentials = pika.PlainCredentials('worldbrain', 'worldbrain')
     parameters = pika.ConnectionParameters('polisky.me', 5672, '/worldbrain',
-                                           credentials)
+                                           credentials, socket_timeout=2)
 
     def __init__(self, queue='worldbrain-spider'):
         self.SPIDER_QUEUE = queue
